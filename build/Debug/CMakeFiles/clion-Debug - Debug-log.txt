@@ -1,0 +1,5 @@
+"E:\CLION\CLion 2025.3.1\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug --preset Debug -S F:\CLION__Project\universe_half_bridge -B F:\CLION__Project\universe_half_bridge\build\Debug
+Build type: Debug
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: F:/CLION__Project/universe_half_bridge/build/Debug
