@@ -83,22 +83,22 @@
 uint8_t OLED_DisplayBuf[8][128];
 
 /*********************全局变量*/
-void DWT_Init(void)
-{
-	// 解锁 DWT 寄存器（部分芯片需要）
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-	// 清零计数器并使能
-	DWT->CYCCNT = 0;
-	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-}
+//void DWT_Init(void)
+//{
+//	// 解锁 DWT 寄存器（部分芯片需要）
+//	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+//	// 清零计数器并使能
+//	DWT->CYCCNT = 0;
+//	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+//}
 
-void Delay_us(uint32_t us)
-{
-	uint32_t start = DWT->CYCCNT;
-	uint32_t ticks = us * (SystemCoreClock / 1000000); // 1us 对应时钟数
-
-	while ((DWT->CYCCNT - start) < ticks);
-}
+//void Delay_us(uint32_t us)
+//{
+//	uint32_t start = DWT->CYCCNT;
+//	uint32_t ticks = us * (SystemCoreClock / 1000000); // 1us 对应时钟数
+//
+//	while ((DWT->CYCCNT - start) < ticks);
+//}
 
 /*引脚配置*********************/
 
@@ -114,6 +114,7 @@ void OLED_W_D0(uint8_t BitValue)
 {
 	/*根据BitValue的值，将D0置高电平或者低电平*/
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6,BitValue);
+	//Delay_us(1);	//适当的延时，确保时序满足OLED的要求
 
 }
 
@@ -129,6 +130,7 @@ void OLED_W_D1(uint8_t BitValue)
 {
 	/*根据BitValue的值，将D1置高电平或者低电平*/
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,BitValue);
+	//Delay_us(1);	//适当的延时，确保时序满足OLED的要求
 }
 
 /**
@@ -143,6 +145,7 @@ void OLED_W_RES(uint8_t BitValue)
 {
 	/*根据BitValue的值，将RES置高电平或者低电平*/
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3,BitValue);
+	//Delay_us(1);	//适当的延时，确保时序满足OLED的要求
 }
 
 /**
@@ -157,6 +160,7 @@ void OLED_W_DC(uint8_t BitValue)
 {
 	/*根据BitValue的值，将DC置高电平或者低电平*/
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4,BitValue);
+	//Delay_us(1);	//适当的延时，确保时序满足OLED的要求
 }
 
 /**
@@ -171,6 +175,7 @@ void OLED_W_CS(uint8_t BitValue)
 {
 	/*根据BitValue的值，将CS置高电平或者低电平*/
 	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2,BitValue);
+	//Delay_us(1);	//适当的延时，确保时序满足OLED的要求
 }
 
 /**
@@ -287,6 +292,7 @@ void OLED_WriteData(uint8_t *Data, uint8_t Count)
   */
 void OLED_Init(void)
 {
+	//DWT_Init();				// 初始化DWT计数器，用于Delay_us
 	OLED_GPIO_Init();			//先调用底层的端口初始化
 
 	/*写入一系列的命令，对OLED进行初始化配置*/

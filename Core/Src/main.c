@@ -48,9 +48,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define inner_upper_limit                           60000.0f
-#define inner_lower_limit                           0.0f
-#define BUCK_CC_upper_limit                         24.0f
+#define inner_upper_limit                           59400.0f
+#define inner_lower_limit                           600.0f
+#define BUCK_CC_upper_limit                         18.0f
 #define BUCK_CC_lower_limit                         12.8f
 #define BUCK_CV_upper_limit                         2.1f
 #define BUCK_CV_lower_limit                         0.0f
@@ -70,7 +70,7 @@ enum {
 
 enum EC_DeBug now_EC_DeBug=_phy_setpoint;
 
-float32_t phy_setpoint=0.0f;
+float32_t phy_setpoint=15.0f;
 float32_t calc_setpoint=0;
 float32_t calc_measurement[4]={0.0f,0.0f,0.0f,0.0f};
 float32_t phy_V_low,phy_I_low,phy_V_high,phy_I_high;
@@ -136,10 +136,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_HRTIM1_Init();
   MX_ADC1_Init();
+  MX_HRTIM1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(200);
+  //HAL_Delay(200);
   OLED_Init();
 
   HAL_ADCEx_Calibration_Start(&hadc1,ADC_SINGLE_ENDED);
@@ -159,11 +159,11 @@ int main(void)
       break;
   }
 
-  HAL_HRTIM_WaveformCountStart(&hhrtim1, HRTIM_TIMERID_TIMER_A);//开启定时器
+  HAL_HRTIM_WaveformCountStart(&hhrtim1, HRTIM_TIMERID_TIMER_C);//开启定时器
 
   software_start();//软件软启动
 
-  __HAL_HRTIM_TIMER_ENABLE_IT(&hhrtim1,HRTIM_TIMERINDEX_TIMER_A,HRTIM_TIM_IT_UPD);//开启更新中断,开启PID
+  //__HAL_HRTIM_TIMER_ENABLE_IT(&hhrtim1,HRTIM_TIMERINDEX_TIMER_C,HRTIM_TIM_IT_UPD);//开启更新中断,开启PID
 
   DeBug_interface_head();
   /* USER CODE END 2 */
@@ -216,11 +216,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV2;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV4;
   RCC_OscInitStruct.PLL.PLLN = 75;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
@@ -353,12 +354,12 @@ void BOOST_CV_init(arm_pid_instance_f32 *pid_outer,arm_pid_instance_f32 *pid_inn
 }
 
 void software_start(void) {
-  HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TA1|HRTIM_OUTPUT_TA2);//开启通道输出
+  HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TC1|HRTIM_OUTPUT_TC2);//开启通道输出
 
   for (int i=0;i<=software_start_digital_setpoint;i+=software_step_size)
   {
     ACMP1_T.CompareValue=i;
-    HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_COMPAREUNIT_1, &ACMP1_T);
+    HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_C, HRTIM_COMPAREUNIT_1, &ACMP1_T);
     HAL_Delay(2);
   }
 }
@@ -401,7 +402,7 @@ uint32_t PID_Compute(arm_pid_instance_f32 *pid_outer,arm_pid_instance_f32 *pid_i
 void HAL_HRTIM_RegistersUpdateCallback(HRTIM_HandleTypeDef *hhrtim,uint32_t TimerIdx) {
   static uint8_t count = 0;
   static uint32_t out=0;
-  if (TimerIdx == HRTIM_TIMERINDEX_TIMER_A)
+  if (TimerIdx == HRTIM_TIMERINDEX_TIMER_C)
     {
       count++;
       if (count%2==0)
@@ -428,19 +429,19 @@ void HAL_HRTIM_RegistersUpdateCallback(HRTIM_HandleTypeDef *hhrtim,uint32_t Time
             out=PID_Compute(&pid_outer,&pid_inner,calc_setpoint-calc_measurement[2],
               calc_measurement[3]);
             ACMP1_T.CompareValue=out;
-            HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_COMPAREUNIT_1, &ACMP1_T);
+            HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_C, HRTIM_COMPAREUNIT_1, &ACMP1_T);
             break;
           case BUCK_CC:
             out=PID_Compute(&pid_outer,&pid_inner,calc_setpoint-calc_measurement[1],
               calc_measurement[0]);
             ACMP1_T.CompareValue=out;
-            HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_COMPAREUNIT_1, &ACMP1_T);
+            HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_C, HRTIM_COMPAREUNIT_1, &ACMP1_T);
             break;
           case BUCK_CV:
             out=PID_Compute(&pid_outer,&pid_inner,calc_setpoint-calc_measurement[0],
               calc_measurement[1]);
             ACMP1_T.CompareValue=out;
-            HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_COMPAREUNIT_1, &ACMP1_T);
+            HAL_HRTIM_WaveformCompareConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_C, HRTIM_COMPAREUNIT_1, &ACMP1_T);
             break;
           default:
             break;

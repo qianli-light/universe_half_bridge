@@ -77,7 +77,7 @@ void Error_Handler(void);
 #define EXTI9_GPIO_Port GPIOB
 #define EXTI9_EXTI_IRQn EXTI9_5_IRQn
 
-  /* USER CODE BEGIN Private defines */
+/* USER CODE BEGIN Private defines */
   void BUCK_CC_init(arm_pid_instance_f32 *pid_outer,arm_pid_instance_f32 *pid_inner);
   void BUCK_CV_init(arm_pid_instance_f32 *pid_outer,arm_pid_instance_f32 *pid_inner);
   void BOOST_CV_init(arm_pid_instance_f32 *pid_outer,arm_pid_instance_f32 *pid_inner);
@@ -101,7 +101,7 @@ void Error_Handler(void);
   };
 
   extern enum EC_DeBug now_EC_DeBug;
-  /* USER CODE END Private defines */
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
